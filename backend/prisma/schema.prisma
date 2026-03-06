@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum StockStatus {
+  AVAILABLE
+  PENDING_QUARANTINE
+  QUARANTINED
+}
+
+enum TransactionType {
+  IN
+  OUT
+  TRANSFER
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  email        String        @unique
+  password     String
+  role         Role          @default(STAFF)
+  transactions Transaction[]
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@map("user")
+}
+
+model Product {
+  id           Int           @id @default(autoincrement())
+  sku          String        @unique
+  name         String
+  unit         String
+  stocks       Stock[]
+  transactions Transaction[]
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@map("product")
+}
+
+model Location {
+  id           Int           @id @default(autoincrement())
+  bin_code     String        @unique
+  zone         String
+  stocks       Stock[]
+  transactions Transaction[]
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@map("location")
+}
+
+model Stock {
+  id          Int         @id @default(autoincrement())
+  productId   Int         @map("product_id")
+  product     Product     @relation(fields: [productId], references: [id])
+  locationId  Int         @map("location_id")
+  location    Location    @relation(fields: [locationId], references: [id])
+  qty         Int
+  batch_no    String
+  expired_at  DateTime?
+  status      StockStatus @default(AVAILABLE)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  @@unique([productId, locationId, batch_no])
+  @@map("stock")
+}
+
+model Transaction {
+  id          Int             @id @default(autoincrement())
+  type        TransactionType
+  productId   Int             @map("product_id")
+  product     Product         @relation(fields: [productId], references: [id])
+  locationId  Int             @map("location_id")
+  location    Location        @relation(fields: [locationId], references: [id])
+  userId      Int             @map("user_id")
+  user        User            @relation(fields: [userId], references: [id])
+  qty         Int
+  batch_no    String
+  timestamp   DateTime        @default(now())
+
+  @@map("transaction")
+}
