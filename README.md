@@ -18,12 +18,7 @@ Project ini menggunakan arsitektur **Fullstack TypeScript** dengan performa ting
 ## Project Structure
 ```text
 .
-├── backend/            # NestJS API Service
-├── frontend/           # Next.js Client Application
-├── docs/               # Detailed Documentation (The "Antigravity" Way)
-│   ├── ARCHITECTURE.md # ERD & Database Logic
-│   ├── WORKFLOW.md     # Inbound, Outbound, & FEFO Rules
-│   ├── API_SPEC.md     # API Endpoints & Auth
-│   └── ROADMAP.md      # 7-Day Sprint Progress
-├── pnpm-workspace.yaml # pnpm workspace configuration
+├── backend/            # NestJS
+├── frontend/           # Next.js
+├── database/           # PostgreSQL
 └── README.md           # This file
