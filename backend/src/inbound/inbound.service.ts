@@ -10,7 +10,6 @@ export class InboundService {
     async receiveProduct(userId: number, dto: CreateInboundDto) {
         const { productId, locationId, qty, batchNo, expiredAt } = dto;
 
-        // 1. Validate Product
         const product = await this.prisma.product.findUnique({
             where: { id: productId },
         });
@@ -18,7 +17,6 @@ export class InboundService {
             throw new NotFoundException(`Product with ID ${productId} not found`);
         }
 
-        // 2. Validate Location
         const location = await this.prisma.location.findUnique({
             where: { id: locationId },
         });
@@ -27,9 +25,7 @@ export class InboundService {
         }
 
         try {
-            // 3. Perform atomic operation using Prisma Transaction
             return await this.prisma.$transaction(async (tx) => {
-                // A. Upsert Stock
                 const stock = await tx.stock.upsert({
                     where: {
                         productId_locationId_batch_no: {
@@ -52,7 +48,6 @@ export class InboundService {
                     },
                 });
 
-                // B. Create Transaction Audit Trail
                 const transaction = await tx.transaction.create({
                     data: {
                         type: TransactionType.IN,

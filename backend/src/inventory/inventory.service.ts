@@ -17,7 +17,6 @@ export class InventoryService {
         });
 
         const today = new Date();
-        // 30 days in ms
         const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
 
         return stocks.map((stock) => {
@@ -50,7 +49,6 @@ export class InventoryService {
             throw new BadRequestException('Source and destination locations cannot be the same');
         }
 
-        // 1. Verify Source Location & Product
         const sourceStock = await this.prisma.stock.findUnique({
             where: {
                 productId_locationId_batch_no: {
@@ -69,7 +67,6 @@ export class InventoryService {
             throw new BadRequestException(`Insufficient stock. Available: ${sourceStock.qty}, Requested: ${qty}`);
         }
 
-        // 2. Verify Destination Location
         const destinationLocation = await this.prisma.location.findUnique({
             where: { id: toLocationId },
         });
@@ -78,12 +75,10 @@ export class InventoryService {
             throw new NotFoundException(`Destination location with ID ${toLocationId} not found`);
         }
 
-        // Check if moving to QUARANTINE zone
         const isMovingToQuarantine = destinationLocation.zone.toUpperCase() === 'QUARANTINE';
 
         try {
             return await this.prisma.$transaction(async (tx) => {
-                // A. Deduct from Source
                 const updatedSource = await tx.stock.update({
                     where: { id: sourceStock.id },
                     data: {
@@ -92,7 +87,6 @@ export class InventoryService {
                     },
                 });
 
-                // B. Add to Destination (Upsert)
                 const updatedDestination = await tx.stock.upsert({
                     where: {
                         productId_locationId_batch_no: {
@@ -116,18 +110,15 @@ export class InventoryService {
                     },
                 });
 
-                // C. Record Transaction Audit Trail
                 const transaction = await tx.transaction.create({
                     data: {
                         type: TransactionType.TRANSFER,
                         productId,
-                        locationId: fromLocationId, // Log source as main location
+                        locationId: fromLocationId,
                         batch_no: batchNo,
                         qty,
                         userId,
                         timestamp: new Date(),
-                        // In a real system, you might add a toLocationId relation in transaction to fully track transfers.
-                        // For now, type=TRANSFER and timestamp can correlate deductions and additions.
                     },
                 });
 

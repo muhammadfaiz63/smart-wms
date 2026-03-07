@@ -8,9 +8,23 @@ import { LocationModule } from './location/location.module';
 import { InboundModule } from './inbound/inbound.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { OutboundModule } from './outbound/outbound.module';
+import { QuarantineModule } from './quarantine/quarantine.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ProductModule, LocationModule, InboundModule, InventoryModule, OutboundModule],
+  imports: [
+    ScheduleModule.forRoot(),
+    PrismaModule,
+    AuthModule,
+    ProductModule,
+    LocationModule,
+    InboundModule,
+    InventoryModule,
+    OutboundModule,
+    QuarantineModule,
+    ReportsModule
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

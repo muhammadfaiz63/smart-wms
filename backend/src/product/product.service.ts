@@ -40,7 +40,7 @@ export class ProductService {
     }
 
     async update(id: number, updateProductDto: UpdateProductDto) {
-        await this.findOne(id); // Ensure it exists
+        await this.findOne(id);
 
         if (updateProductDto.sku) {
             const existingProduct = await this.prisma.product.findUnique({
@@ -59,9 +59,8 @@ export class ProductService {
     }
 
     async remove(id: number) {
-        await this.findOne(id); // Ensure it exists
+        await this.findOne(id);
 
-        // Check for related stocks or transactions before deleting
         const relatedStocks = await this.prisma.stock.findFirst({
             where: { productId: id }
         });

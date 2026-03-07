@@ -10,7 +10,6 @@ export class OutboundService {
     async processOutbound(userId: number, dto: CreateOutboundDto) {
         const { productId, qty } = dto;
 
-        // 1. Verify Product exists
         const product = await this.prisma.product.findUnique({
             where: { id: productId },
         });
@@ -19,10 +18,6 @@ export class OutboundService {
             throw new NotFoundException(`Product with ID ${productId} not found`);
         }
 
-        // 2. Fetch available stock grouped by batches/bins, ordered by expired_at (FEFO)
-        // ASC order means older dates (closer to expiring) come first.
-        // Nulls (no expiration) will typically come last in sorting by default Prisma behavior, 
-        // but we can ensure they are available to pick.
         const availableStocks = await this.prisma.stock.findMany({
             where: {
                 productId,
@@ -30,22 +25,20 @@ export class OutboundService {
                 status: StockStatus.AVAILABLE,
             },
             orderBy: [
-                { expired_at: 'asc' }, // FEFO first
-                { updatedAt: 'asc' },  // FIFO fallback if no expiration date
+                { expired_at: 'asc' },
+                { updatedAt: 'asc' },
             ],
             include: {
                 location: true
             }
         });
 
-        // 3. Check total available quantity
         const totalAvailable = availableStocks.reduce((sum, stock) => sum + stock.qty, 0);
         if (totalAvailable < qty) {
             throw new BadRequestException(`Insufficient total stock for product. Available: ${totalAvailable}, Requested: ${qty}`);
         }
 
         try {
-            // 4. Perform the FEFO deduction inside a transaction
             return await this.prisma.$transaction(async (tx) => {
                 let remainingQtyNeeded = qty;
                 const pickedDetails: { bin: string; batch: string; qty_taken: number }[] = [];
@@ -55,7 +48,6 @@ export class OutboundService {
 
                     const qtyToTakeFromThisStock = Math.min(stock.qty, remainingQtyNeeded);
 
-                    // Update physical stock record
                     await tx.stock.update({
                         where: { id: stock.id },
                         data: {
@@ -64,7 +56,6 @@ export class OutboundService {
                         },
                     });
 
-                    // Create Audit Transaction Record
                     await tx.transaction.create({
                         data: {
                             type: TransactionType.OUT,
@@ -86,7 +77,6 @@ export class OutboundService {
                     remainingQtyNeeded -= qtyToTakeFromThisStock;
                 }
 
-                // Create a human readable suggestion message
                 const suggestionText = pickedDetails.map(d => `${d.qty_taken} from Batch ${d.batch} in Bin ${d.bin}`).join(', ');
 
                 return {

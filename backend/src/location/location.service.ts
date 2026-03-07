@@ -61,7 +61,6 @@ export class LocationService {
     async remove(id: number) {
         await this.findOne(id);
 
-        // Check for related stocks or transactions before deleting
         const relatedStocks = await this.prisma.stock.findFirst({
             where: { locationId: id }
         });
