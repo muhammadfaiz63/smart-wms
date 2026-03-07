@@ -6,9 +6,11 @@ import { AuthModule } from './auth/auth.module';
 import { ProductModule } from './product/product.module';
 import { LocationModule } from './location/location.module';
 import { InboundModule } from './inbound/inbound.module';
+import { InventoryModule } from './inventory/inventory.module';
+import { OutboundModule } from './outbound/outbound.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ProductModule, LocationModule, InboundModule],
+  imports: [PrismaModule, AuthModule, ProductModule, LocationModule, InboundModule, InventoryModule, OutboundModule],
   controllers: [AppController],
   providers: [AppService],
 })
