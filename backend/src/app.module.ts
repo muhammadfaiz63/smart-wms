@@ -11,6 +11,7 @@ import { OutboundModule } from './outbound/outbound.module';
 import { QuarantineModule } from './quarantine/quarantine.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ReportsModule } from './reports/reports.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { ReportsModule } from './reports/reports.module';
     InventoryModule,
     OutboundModule,
     QuarantineModule,
-    ReportsModule
+    ReportsModule,
+    UserModule
   ],
   controllers: [AppController],
   providers: [AppService],

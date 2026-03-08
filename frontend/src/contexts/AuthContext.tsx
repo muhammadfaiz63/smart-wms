@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import Cookies from 'js-cookie';
 import { useRouter, usePathname } from 'next/navigation';
+import { jwtDecode } from 'jwt-decode';
 
 interface User {
     id: number;
@@ -32,6 +33,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const storedToken = Cookies.get('token');
         if (storedToken) {
             setTokenState(storedToken);
+            try {
+                const decoded: any = jwtDecode(storedToken);
+                setUser({ id: decoded.sub, email: decoded.email, role: decoded.role });
+            } catch (e) {
+                console.error("Failed to decode token", e);
+            }
         } else {
             if (pathname !== '/login') {
                 router.push('/login');
@@ -40,9 +47,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(false);
     }, [pathname, router]);
 
-    const setAuth = (newToken: string, newUser?: User) => {
+    const setAuth = (newToken: string) => {
         setTokenState(newToken);
-        if (newUser) setUser(newUser);
+        try {
+            const decoded: any = jwtDecode(newToken);
+            setUser({ id: decoded.sub, email: decoded.email, role: decoded.role });
+        } catch (e) {
+            console.error("Failed to decode new token", e);
+        }
         Cookies.set('token', newToken, { expires: 1 });
     };
 

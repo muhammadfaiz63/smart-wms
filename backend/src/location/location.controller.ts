@@ -3,16 +3,20 @@ import { LocationService } from './location.service';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { Role } from '@prisma/client';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('master/locations')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('master/locations')
 export class LocationController {
     constructor(private readonly locationService: LocationService) { }
 
     @ApiOperation({ summary: 'Create a new location bin' })
+    @Roles(Role.ADMIN)
     @Post()
     create(@Body() createLocationDto: CreateLocationDto) {
         return this.locationService.create(createLocationDto);
@@ -31,12 +35,14 @@ export class LocationController {
     }
 
     @ApiOperation({ summary: 'Update a location by ID' })
+    @Roles(Role.ADMIN)
     @Patch(':id')
     update(@Param('id', ParseIntPipe) id: number, @Body() updateLocationDto: UpdateLocationDto) {
         return this.locationService.update(id, updateLocationDto);
     }
 
     @ApiOperation({ summary: 'Delete a location by ID' })
+    @Roles(Role.ADMIN)
     @Delete(':id')
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.locationService.remove(id);

@@ -1,8 +1,10 @@
 'use client';
 
+import { useAuth } from '../contexts/AuthContext';
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Download, Upload, Boxes, Package, MapPin, PackageOpen } from 'lucide-react';
+import { LayoutDashboard, Download, Upload, Boxes, Package, MapPin, PackageOpen, Users as UsersIcon } from 'lucide-react';
 
 const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -11,10 +13,19 @@ const navItems = [
     { href: '/inventory', label: 'Inventory Monitor', icon: Boxes },
     { href: '/master/products', label: 'Products', icon: Package },
     { href: '/master/locations', label: 'Locations', icon: MapPin },
+    { href: '/master/users', label: 'Users', icon: UsersIcon },
 ];
 
 export function Sidebar() {
     const pathname = usePathname();
+    const { user } = useAuth();
+
+    const visibleNavItems = navItems.filter(item => {
+        if (item.href.startsWith('/master') && user?.role !== 'ADMIN') {
+            return false;
+        }
+        return true;
+    });
 
     return (
         <aside className="w-64 border-r bg-background hidden md:flex flex-col z-20">
@@ -28,7 +39,7 @@ export function Sidebar() {
             </div>
 
             <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
-                {navItems.map((item) => {
+                {visibleNavItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
                     return (
                         <Link

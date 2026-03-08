@@ -3,16 +3,20 @@ import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { Role } from '@prisma/client';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('master/products')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('master/products')
 export class ProductController {
     constructor(private readonly productService: ProductService) { }
 
     @ApiOperation({ summary: 'Create a new product' })
+    @Roles(Role.ADMIN)
     @Post()
     create(@Body() createProductDto: CreateProductDto) {
         return this.productService.create(createProductDto);
@@ -31,12 +35,14 @@ export class ProductController {
     }
 
     @ApiOperation({ summary: 'Update a product by ID' })
+    @Roles(Role.ADMIN)
     @Patch(':id')
     update(@Param('id', ParseIntPipe) id: number, @Body() updateProductDto: UpdateProductDto) {
         return this.productService.update(id, updateProductDto);
     }
 
     @ApiOperation({ summary: 'Delete a product by ID' })
+    @Roles(Role.ADMIN)
     @Delete(':id')
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.productService.remove(id);

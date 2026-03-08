@@ -17,14 +17,12 @@ async function main() {
     console.log('Seeding database...');
 
     // 1. Seed Users
-    const hashedPassword = await bcrypt.hash('smartwmsadmin01!', 10);
-
     const admin = await prisma.user.upsert({
         where: { email: 'admin@smartwms.com' },
         update: {},
         create: {
             email: 'admin@smartwms.com',
-            password: hashedPassword,
+            password: await bcrypt.hash('smartwmsadmin01!', 10),
             role: Role.ADMIN,
         },
     });
@@ -34,7 +32,7 @@ async function main() {
         update: {},
         create: {
             email: 'staff1@smartwms.com',
-            password: hashedPassword,
+            password: await bcrypt.hash('smartwmsstaff01!', 10),
             role: Role.STAFF,
         },
     });
@@ -44,7 +42,7 @@ async function main() {
         update: {},
         create: {
             email: 'staff2@smartwms.com',
-            password: hashedPassword,
+            password: await bcrypt.hash('smartwmsstaff02!', 10),
             role: Role.STAFF,
         },
     });
