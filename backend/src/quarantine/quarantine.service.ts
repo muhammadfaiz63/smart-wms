@@ -9,7 +9,7 @@ export class QuarantineService {
 
     constructor(private readonly prisma: PrismaService) { }
 
-    @Cron(CronExpression.EVERY_10_MINUTES)
+    @Cron(CronExpression.EVERY_12_HOURS)
     async handleExpiredStockDetection() {
         this.logger.debug('Running background job: Checking for expired stocks...');
         const now = new Date();
