@@ -3,19 +3,24 @@
 import { useState, useEffect } from 'react';
 import { DashboardLayout } from '../../components/DashboardLayout';
 import { axiosClient } from '../../lib/axiosClient';
-import { Boxes, AlertTriangle, Loader2, ArrowRightLeft } from 'lucide-react';
+import { AlertTriangle, Loader2, ArrowRightLeft } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 
 interface Stock {
-    sku: string;
-    name: string;
     bin_code: string;
     batch_no: string;
     qty: number;
     expired_at: string | null;
     status: string;
+    product: {
+        sku: string;
+        name: string;
+    };
+    location: {
+        bin_code: string;
+    };
 }
 
 export default function InventoryPage() {
@@ -91,10 +96,10 @@ export default function InventoryPage() {
 
                                     return (
                                         <TableRow key={idx} className={`${expired || pendingQuarantine ? 'bg-destructive/5' : nearExp ? 'bg-amber-500/5' : ''}`}>
-                                            <TableCell className="font-medium">{item.name}</TableCell>
-                                            <TableCell className="text-muted-foreground">{item.sku}</TableCell>
+                                            <TableCell className="font-medium">{item.product.name}</TableCell>
+                                            <TableCell className="text-muted-foreground">{item.product.sku}</TableCell>
                                             <TableCell>
-                                                <Badge variant="outline" className="font-mono">{item.bin_code}</Badge>
+                                                <Badge variant="outline" className="font-mono">{item.location.bin_code}</Badge>
                                             </TableCell>
                                             <TableCell>{item.batch_no}</TableCell>
                                             <TableCell>

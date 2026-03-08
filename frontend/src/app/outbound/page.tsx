@@ -98,7 +98,15 @@ export default function OutboundPage() {
                                     <Label>Target Product SKUs</Label>
                                     <Select value={formData.productId} onValueChange={v => setFormData({ ...formData, productId: v || '' })} required>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select a product to dispatch..." />
+                                            {formData.productId ? (
+                                                <span className="flex flex-1 text-left text-foreground truncate block">
+                                                    {products.find(p => p.id.toString() === formData.productId)
+                                                        ? `[${products.find(p => p.id.toString() === formData.productId)?.sku}] ${products.find(p => p.id.toString() === formData.productId)?.name}`
+                                                        : "Select a product to dispatch..."}
+                                                </span>
+                                            ) : (
+                                                <span className="flex flex-1 text-left text-muted-foreground truncate block">Select a product to dispatch...</span>
+                                            )}
                                         </SelectTrigger>
                                         <SelectContent>
                                             {products.map(p => (

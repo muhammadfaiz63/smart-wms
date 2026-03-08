@@ -112,7 +112,15 @@ export default function InboundPage() {
                                     <Label>Product SKU</Label>
                                     <Select value={formData.productId} onValueChange={v => setFormData({ ...formData, productId: v || '' })} required>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select a product..." />
+                                            {formData.productId ? (
+                                                <span className="flex flex-1 text-left text-foreground truncate block">
+                                                    {products.find(p => p.id.toString() === formData.productId)
+                                                        ? `[${products.find(p => p.id.toString() === formData.productId)?.sku}] ${products.find(p => p.id.toString() === formData.productId)?.name}`
+                                                        : "Select a product..."}
+                                                </span>
+                                            ) : (
+                                                <span className="flex flex-1 text-left text-muted-foreground truncate block">Select a product...</span>
+                                            )}
                                         </SelectTrigger>
                                         <SelectContent>
                                             {products.map(p => (
@@ -128,7 +136,15 @@ export default function InboundPage() {
                                     <Label>Destination Bin</Label>
                                     <Select value={formData.locationId} onValueChange={v => setFormData({ ...formData, locationId: v || '' })} required>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select destination bin..." />
+                                            {formData.locationId ? (
+                                                <span className="flex flex-1 text-left text-foreground truncate block">
+                                                    {locations.find(l => l.id.toString() === formData.locationId)
+                                                        ? `${locations.find(l => l.id.toString() === formData.locationId)?.bin_code} (${locations.find(l => l.id.toString() === formData.locationId)?.zone})`
+                                                        : "Select destination bin..."}
+                                                </span>
+                                            ) : (
+                                                <span className="flex flex-1 text-left text-muted-foreground truncate block">Select destination bin...</span>
+                                            )}
                                         </SelectTrigger>
                                         <SelectContent>
                                             {locations.map(l => (
