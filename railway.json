@@ -5,6 +5,6 @@
         "buildCommand": "pnpm --filter backend install && pnpm --filter backend exec prisma generate && pnpm --filter backend run build"
     },
     "deploy": {
-        "startCommand": "cd backend && pnpm run start:prod"
+        "startCommand": "cd backend && node dist/main.js"
     }
 }
