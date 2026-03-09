@@ -8,6 +8,7 @@ import { jwtDecode } from 'jwt-decode';
 interface User {
     id: number;
     email: string;
+    name: string;
     role: string;
 }
 
@@ -35,7 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setTokenState(storedToken);
             try {
                 const decoded: any = jwtDecode(storedToken);
-                setUser({ id: decoded.sub, email: decoded.email, role: decoded.role });
+                setUser({ id: decoded.sub, email: decoded.email, name: decoded.name || 'User', role: decoded.role });
             } catch (e) {
                 console.error("Failed to decode token", e);
             }
@@ -51,7 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setTokenState(newToken);
         try {
             const decoded: any = jwtDecode(newToken);
-            setUser({ id: decoded.sub, email: decoded.email, role: decoded.role });
+            setUser({ id: decoded.sub, email: decoded.email, name: decoded.name || 'User', role: decoded.role });
         } catch (e) {
             console.error("Failed to decode new token", e);
         }

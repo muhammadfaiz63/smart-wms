@@ -21,7 +21,10 @@ export function Sidebar() {
     const { user } = useAuth();
 
     const visibleNavItems = navItems.filter(item => {
-        if (item.href.startsWith('/master') && user?.role !== 'ADMIN') {
+        // Only ADMIN can see users master data; Products and Locations are read-only for STAFF
+        const isMasterMenu = item.href.startsWith('/master');
+        const isAllowedForStaff = item.href === '/master/products' || item.href === '/master/locations';
+        if (isMasterMenu && !isAllowedForStaff && user?.role !== 'ADMIN') {
             return false;
         }
         return true;

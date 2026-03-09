@@ -16,6 +16,7 @@ import { DashboardLayout } from '../../../components/DashboardLayout';
 interface User {
     id: number;
     email: string;
+    name: string;
     role: string;
     createdAt?: string;
 }
@@ -28,6 +29,7 @@ export default function UsersPage() {
     const [editingUser, setEditingUser] = useState<User | null>(null);
 
     const [formData, setFormData] = useState({
+        name: '',
         email: '',
         password: '',
         role: 'STAFF',
@@ -54,6 +56,7 @@ export default function UsersPage() {
         if (user) {
             setEditingUser(user);
             setFormData({
+                name: user.name || '',
                 email: user.email,
                 password: '',
                 role: user.role,
@@ -61,6 +64,7 @@ export default function UsersPage() {
         } else {
             setEditingUser(null);
             setFormData({
+                name: '',
                 email: '',
                 password: '',
                 role: 'STAFF',
@@ -76,7 +80,7 @@ export default function UsersPage() {
 
         try {
             if (editingUser) {
-                const updateData: any = { role: formData.role };
+                const updateData: any = { role: formData.role, name: formData.name };
                 if (formData.password) updateData.password = formData.password;
                 if (formData.email !== editingUser.email) updateData.email = formData.email;
                 await axiosClient.patch(`/master/users/${editingUser.id}`, updateData);
@@ -142,7 +146,7 @@ export default function UsersPage() {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-[80px]">ID</TableHead>
+                                        <TableHead>Name</TableHead>
                                         <TableHead>Email</TableHead>
                                         <TableHead>Role</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
@@ -151,14 +155,14 @@ export default function UsersPage() {
                                 <TableBody>
                                     {users.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={4} className="text-center h-24 text-muted-foreground">
+                                            <TableCell colSpan={3} className="text-center h-24 text-muted-foreground">
                                                 No users found.
                                             </TableCell>
                                         </TableRow>
                                     ) : (
                                         users.map((user) => (
                                             <TableRow key={user.id}>
-                                                <TableCell className="font-medium">#{user.id}</TableCell>
+                                                <TableCell className="font-semibold">{user.name}</TableCell>
                                                 <TableCell>{user.email}</TableCell>
                                                 <TableCell>
                                                     <span className={`px-2 py-1 rounded text-xs font-medium ${user.role === 'ADMIN' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
@@ -190,6 +194,15 @@ export default function UsersPage() {
                             <DialogTitle>{editingUser ? 'Edit User' : 'Add New User'}</DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+                            <div className="space-y-2">
+                                <Label>Name</Label>
+                                <Input
+                                    type="text"
+                                    value={formData.name}
+                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                    required
+                                />
+                            </div>
                             <div className="space-y-2">
                                 <Label>Email</Label>
                                 <Input

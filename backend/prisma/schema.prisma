@@ -26,6 +26,7 @@ enum TransactionType {
 model User {
   id           Int           @id @default(autoincrement())
   email        String        @unique
+  name         String        @default("User")
   password     String
   role         Role          @default(STAFF)
   transactions Transaction[]

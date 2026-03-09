@@ -1,6 +1,8 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { StockStatus, TransactionType } from '@prisma/client';
+import * as ExcelJS from 'exceljs';
+import { PassThrough } from 'stream';
 
 @Injectable()
 export class ReportsService {
@@ -115,6 +117,76 @@ export class ReportsService {
         } catch (error) {
             console.error('Failed to generate report summary:', error);
             throw new InternalServerErrorException('Failed to generate report summary');
+        }
+    }
+
+    async exportExcel(): Promise<PassThrough> {
+        try {
+            // Fetch all stock data joined with product and location
+            const stocks = await this.prisma.stock.findMany({
+                where: { qty: { gt: 0 } },
+                include: {
+                    product: true,
+                    location: true
+                },
+                orderBy: {
+                    product: { name: 'asc' }
+                }
+            });
+
+            // Make a new workbook and worksheet
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Smart WMS';
+            workbook.created = new Date();
+
+            const worksheet = workbook.addWorksheet('Stock Inventory');
+
+            // Define columns
+            worksheet.columns = [
+                { header: 'No', key: 'no', width: 5 },
+                { header: 'Product SKU', key: 'sku', width: 15 },
+                { header: 'Product Name', key: 'productName', width: 30 },
+                { header: 'Location Zone', key: 'zone', width: 15 },
+                { header: 'Bin Code', key: 'binCode', width: 15 },
+                { header: 'Batch No', key: 'batchNo', width: 15 },
+                { header: 'Qty', key: 'qty', width: 10 },
+                { header: 'Unit', key: 'unit', width: 10 },
+                { header: 'Expired At', key: 'expiredAt', width: 15 },
+                { header: 'Status', key: 'status', width: 15 }
+            ];
+
+            // Style headers
+            worksheet.getRow(1).font = { bold: true };
+            worksheet.getRow(1).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFE0E0E0' }
+            };
+
+            // Add rows
+            stocks.forEach((stock, index) => {
+                worksheet.addRow({
+                    no: index + 1,
+                    sku: stock.product.sku,
+                    productName: stock.product.name,
+                    zone: stock.location.zone,
+                    binCode: stock.location.bin_code,
+                    batchNo: stock.batch_no,
+                    qty: stock.qty,
+                    unit: stock.product.unit,
+                    expiredAt: stock.expired_at ? stock.expired_at.toISOString().split('T')[0] : '-',
+                    status: stock.status
+                });
+            });
+
+            // Write to a stream
+            const stream = new PassThrough();
+            await workbook.xlsx.write(stream);
+
+            return stream;
+        } catch (error) {
+            console.error('Failed to generate excel report:', error);
+            throw new InternalServerErrorException('Failed to generate excel report');
         }
     }
 }

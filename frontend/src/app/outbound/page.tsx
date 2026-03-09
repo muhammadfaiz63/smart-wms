@@ -78,7 +78,6 @@ export default function OutboundPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Dispatch Request Form */}
                     <Card>
                         <CardHeader>
                             <CardTitle>Dispatch Request</CardTitle>
@@ -138,7 +137,6 @@ export default function OutboundPage() {
                         </CardContent>
                     </Card>
 
-                    {/* System Suggestion Result */}
                     <Card className={`${suggestion ? 'border-emerald-500/50 bg-emerald-500/5' : ''}`}>
                         <CardHeader>
                             <CardTitle>System Pick Instruction</CardTitle>

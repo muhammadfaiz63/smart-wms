@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '../components/DashboardLayout';
 import { axiosClient } from '../lib/axiosClient';
-import { LayoutDashboard, Package, Boxes, Download, Upload, AlertTriangle, Loader2, ArrowUpRight, BarChart3, AlertCircle } from 'lucide-react';
+import { LayoutDashboard, Package, Boxes, Download, Upload, AlertTriangle, Loader2, ArrowUpRight, BarChart3, AlertCircle, FileSpreadsheet } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Button } from '../components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SummaryData {
   total_products: number;
@@ -22,8 +24,10 @@ interface SummaryData {
 const COLORS = ['#0f172a', '#ef4444', '#f59e0b'];
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [summary, setSummary] = useState<SummaryData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [downloadingExcel, setDownloadingExcel] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -39,6 +43,33 @@ export default function DashboardPage() {
     };
     fetchSummary();
   }, []);
+
+  const handleDownloadExcel = async () => {
+    setDownloadingExcel(true);
+    try {
+      const response = await axiosClient.get('/reports/export/excel', {
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+
+      const fileName = `Stock_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+      link.setAttribute('download', fileName);
+
+      document.body.appendChild(link);
+      link.click();
+
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch (err: any) {
+      alert('Failed to download Excel report.');
+      console.error(err);
+    } finally {
+      setDownloadingExcel(false);
+    }
+  };
 
   if (loading || !summary) {
     return (
@@ -59,14 +90,23 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-primary/10 rounded-lg text-primary">
-              <LayoutDashboard size={24} />
+        <div className='flex justify-between'>
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                <LayoutDashboard size={24} />
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
+            <p className="text-muted-foreground">Welcome back {user?.name} !</p>
           </div>
-          <p className="text-muted-foreground">Welcome back! Here is what's happening in your warehouse today.</p>
+
+          <div className="flex justify-end mb-4">
+            <Button onClick={handleDownloadExcel} disabled={downloadingExcel} className="gap-2">
+              {downloadingExcel ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}
+              {downloadingExcel ? 'Generating...' : 'Download Full Inventory (.xlsx)'}
+            </Button>
+          </div>
         </div>
 
         {error && (
@@ -78,7 +118,6 @@ export default function DashboardPage() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Top Cards */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Products</CardTitle>

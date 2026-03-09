@@ -22,16 +22,20 @@ export class UserService {
     return this.prisma.user.create({
       data: {
         email: createUserDto.email,
+        name: createUserDto.name || 'User',
         password: hashedPassword,
         role: createUserDto.role,
       },
-      select: { id: true, email: true, role: true, createdAt: true }
+      select: { id: true, email: true, name: true, role: true, createdAt: true }
     });
   }
 
-  async findAll() {
+  async findAll(excludeId?: number) {
     return this.prisma.user.findMany({
-      select: { id: true, email: true, role: true, createdAt: true },
+      where: excludeId ? {
+        id: { not: excludeId }
+      } : undefined,
+      select: { id: true, email: true, name: true, role: true, createdAt: true },
       orderBy: { id: 'desc' }
     });
   }
@@ -39,7 +43,7 @@ export class UserService {
   async findOne(id: number) {
     const user = await this.prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, role: true, createdAt: true }
+      select: { id: true, email: true, name: true, role: true, createdAt: true }
     });
     if (!user) throw new NotFoundException('User not found');
     return user;
@@ -67,7 +71,7 @@ export class UserService {
     return this.prisma.user.update({
       where: { id },
       data: dataToUpdate,
-      select: { id: true, email: true, role: true, createdAt: true }
+      select: { id: true, email: true, name: true, role: true, createdAt: true }
     });
   }
 
@@ -76,7 +80,7 @@ export class UserService {
     if (!user) throw new NotFoundException('User not found');
     return this.prisma.user.delete({
       where: { id },
-      select: { id: true, email: true, role: true }
+      select: { id: true, email: true, name: true, role: true }
     });
   }
 }

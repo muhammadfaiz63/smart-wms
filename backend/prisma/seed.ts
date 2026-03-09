@@ -2,6 +2,7 @@ import { PrismaClient, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as pg from 'pg';
+import 'dotenv/config';
 
 const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
@@ -22,6 +23,7 @@ async function main() {
         update: {},
         create: {
             email: 'admin@smartwms.com',
+            name: 'Administrator',
             password: await bcrypt.hash('smartwmsadmin01!', 10),
             role: Role.ADMIN,
         },
@@ -32,6 +34,7 @@ async function main() {
         update: {},
         create: {
             email: 'staff1@smartwms.com',
+            name: 'Warehouse Staff 1',
             password: await bcrypt.hash('smartwmsstaff01!', 10),
             role: Role.STAFF,
         },
@@ -42,6 +45,7 @@ async function main() {
         update: {},
         create: {
             email: 'staff2@smartwms.com',
+            name: 'Warehouse Staff 2',
             password: await bcrypt.hash('smartwmsstaff02!', 10),
             role: Role.STAFF,
         },

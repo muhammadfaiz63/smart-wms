@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -25,8 +25,9 @@ export class UserController {
   @ApiOperation({ summary: 'Get all users' })
   @Roles(Role.ADMIN)
   @Get()
-  findAll() {
-    return this.userService.findAll();
+  findAll(@Req() req: any) {
+    const currentUserId = req.user?.userId;
+    return this.userService.findAll(currentUserId);
   }
 
   @ApiOperation({ summary: 'Get a user by ID' })
