@@ -98,7 +98,7 @@ export default function DashboardPage() {
               </div>
               <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
             </div>
-            <p className="text-muted-foreground">Welcome back {user?.name} !</p>
+            <p className="text-muted-foreground">Welcome back {user?.name}!</p>
           </div>
 
           <div className="flex justify-end mb-4">
