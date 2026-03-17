@@ -27,7 +27,7 @@ export default function LocationsPage() {
     const [openDialog, setOpenDialog] = useState(false);
 
     const [binCode, setBinCode] = useState('');
-    const [zone, setZone] = useState('STOCK');
+    const [zone, setZone] = useState('STORAGE');
     const [submitting, setSubmitting] = useState(false);
 
     const [openEditDialog, setOpenEditDialog] = useState(false);
@@ -56,7 +56,7 @@ export default function LocationsPage() {
         setSubmitting(true);
         try {
             await axiosClient.post('/master/locations', { bin_code: binCode, zone });
-            setBinCode(''); setZone('STOCK');
+            setBinCode(''); setZone('STORAGE');
             setOpenDialog(false);
             await fetchLocations();
         } catch (err: any) {
@@ -80,7 +80,7 @@ export default function LocationsPage() {
             await axiosClient.patch(`/master/locations/${editId}`, { bin_code: binCode, zone });
             setOpenEditDialog(false);
             setEditId(null);
-            setBinCode(''); setZone('STOCK');
+            setBinCode(''); setZone('STORAGE');
             await fetchLocations();
         } catch (err: any) {
             alert(err.response?.data?.message || 'Failed to update location');
@@ -146,9 +146,11 @@ export default function LocationsPage() {
                                                 <SelectValue placeholder="Select zone..." />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="STOCK">STOCK (Regular Storage)</SelectItem>
+                                                <SelectItem value="RECEIVING">RECEIVING (Inbound Area)</SelectItem>
+                                                <SelectItem value="STORAGE">STORAGE (Regular Storage)</SelectItem>
                                                 <SelectItem value="PICKING">PICKING (Fast Moving)</SelectItem>
                                                 <SelectItem value="QUARANTINE">QUARANTINE (Defective/Expired)</SelectItem>
+                                                <SelectItem value="DISPATCH">DISPATCH (Outbound Area)</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
@@ -184,14 +186,16 @@ export default function LocationsPage() {
                                             <SelectValue placeholder="Select zone..." />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="STOCK">STOCK (Regular Storage)</SelectItem>
+                                            <SelectItem value="RECEIVING">RECEIVING (Inbound Area)</SelectItem>
+                                            <SelectItem value="STORAGE">STORAGE (Regular Storage)</SelectItem>
                                             <SelectItem value="PICKING">PICKING (Fast Moving)</SelectItem>
                                             <SelectItem value="QUARANTINE">QUARANTINE (Defective/Expired)</SelectItem>
+                                            <SelectItem value="DISPATCH">DISPATCH (Outbound Area)</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="pt-2 flex justify-end gap-2">
-                                    <Button type="button" variant="outline" onClick={() => { setOpenEditDialog(false); setBinCode(''); setZone('STOCK'); }}>Cancel</Button>
+                                    <Button type="button" variant="outline" onClick={() => { setOpenEditDialog(false); setBinCode(''); setZone('STORAGE'); }}>Cancel</Button>
                                     <Button type="submit" disabled={submitting}>
                                         {submitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
                                         Update Bin
