@@ -9,20 +9,26 @@ import { Input } from '../../components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { Label } from '../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 
 interface Stock {
-    bin_code: string;
+    id: number;
+    product: { id: number; sku: string; name: string };
+    productId: number;
+    location: { id: number; bin_code: string; zone: string };
+    locationId: number;
     batch_no: string;
     qty: number;
     expired_at: string | null;
     status: string;
-    product: {
-        sku: string;
-        name: string;
-    };
-    location: {
-        bin_code: string;
-    };
+}
+
+interface Location {
+    id: number;
+    bin_code: string;
+    zone: string;
 }
 
 function InventoryContent() {
@@ -31,8 +37,15 @@ function InventoryContent() {
     const initialSearch = searchParams.get('search') || '';
 
     const [inventory, setInventory] = useState<Stock[]>([]);
+    const [locations, setLocations] = useState<Location[]>([]);
     const [loading, setLoading] = useState(true);
     const [filterQuery, setFilterQuery] = useState(initialSearch);
+
+    const [openTransferDialog, setOpenTransferDialog] = useState(false);
+    const [selectedStock, setSelectedStock] = useState<Stock | null>(null);
+    const [toLocationId, setToLocationId] = useState<string>('');
+    const [transferQty, setTransferQty] = useState<number>(0);
+    const [submitting, setSubmitting] = useState(false);
 
     // Sync state if URL changes (e.g., from global search)
     useEffect(() => {
@@ -50,8 +63,50 @@ function InventoryContent() {
                 setLoading(false);
             }
         };
+
+        const fetchLocs = async () => {
+            try {
+                const res = await axiosClient.get('/master/locations');
+                setLocations(res.data);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
         fetchInv();
+        fetchLocs();
     }, []);
+
+    const handleTransferClick = (stock: Stock) => {
+        setSelectedStock(stock);
+        setTransferQty(stock.qty);
+        setToLocationId('');
+        setOpenTransferDialog(true);
+    };
+
+    const handleTransfer = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedStock || !toLocationId || transferQty <= 0) return;
+
+        setSubmitting(true);
+        try {
+            await axiosClient.post('/inventory/transfer', {
+                productId: selectedStock.productId,
+                fromLocationId: selectedStock.locationId,
+                toLocationId: parseInt(toLocationId),
+                batchNo: selectedStock.batch_no,
+                qty: transferQty,
+            });
+            setOpenTransferDialog(false);
+            // Refresh inventory
+            const res = await axiosClient.get('/inventory');
+            setInventory(res.data);
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Failed to transfer stock');
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     const isNearExpired = (dateString: string | null) => {
         if (!dateString) return false;
@@ -164,7 +219,7 @@ function InventoryContent() {
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <Button variant="ghost" size="icon" title="Transfer / Quarantine">
+                                                <Button variant="ghost" size="icon" title="Transfer / Quarantine" onClick={() => handleTransferClick(item)}>
                                                     <ArrowRightLeft className="h-4 w-4" />
                                                 </Button>
                                             </TableCell>
@@ -175,6 +230,75 @@ function InventoryContent() {
                         </TableBody>
                     </Table>
                 </div>
+
+                <Dialog open={openTransferDialog} onOpenChange={setOpenTransferDialog}>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle>Stock Transfer / Quarantine</DialogTitle>
+                            <DialogDescription>
+                                Move stock from <b>{selectedStock?.location.bin_code}</b> to another location.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleTransfer} className="space-y-4 pt-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Item</Label>
+                                    <div className="text-sm font-medium truncate">{selectedStock?.product.name}</div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Batch</Label>
+                                    <div className="text-sm font-mono">{selectedStock?.batch_no}</div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Destination Bin</Label>
+                                <Select value={toLocationId} onValueChange={(v) => setToLocationId(v || '')} required>
+                                    <SelectTrigger>
+                                        {toLocationId ? (
+                                            <span className="flex flex-1 text-left text-foreground truncate block">
+                                                {locations.find(l => l.id.toString() === toLocationId)
+                                                    ? `${locations.find(l => l.id.toString() === toLocationId)?.bin_code} (${locations.find(l => l.id.toString() === toLocationId)?.zone})`
+                                                    : "Select destination bin..."}
+                                            </span>
+                                        ) : (
+                                            <span className="flex flex-1 text-left text-muted-foreground truncate block">Select destination bin...</span>
+                                        )}
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {locations
+                                            .filter(l => l.id !== selectedStock?.locationId)
+                                            .map(loc => (
+                                                <SelectItem key={loc.id} value={loc.id.toString()}>
+                                                    {loc.bin_code} ({loc.zone})
+                                                </SelectItem>
+                                            ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Quantity to Move (Max: {selectedStock?.qty})</Label>
+                                <Input
+                                    type="number"
+                                    min={1}
+                                    max={selectedStock?.qty}
+                                    value={transferQty}
+                                    onChange={e => setTransferQty(parseInt(e.target.value) || 0)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="pt-2 flex justify-end gap-2">
+                                <Button type="button" variant="outline" onClick={() => setOpenTransferDialog(false)}>Cancel</Button>
+                                <Button type="submit" disabled={submitting}>
+                                    {submitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+                                    Confirm Transfer
+                                </Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
         </DashboardLayout>
     );
